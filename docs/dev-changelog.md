@@ -13,6 +13,7 @@
 | 3 | 批号功能默认开启 | 2026-08-10 | 前端 |
 | 4 | 库存批次明细视图 | 2026-08-10 | 前后端 |
 | 5 | 颜色字段改为封装 | 2026-08-10 | 前端 (全站) |
+| 6 | **商品列表批次号列** | 2026-08-10 | 前后端 |
 
 ---
 
@@ -140,6 +141,44 @@ FROM eclipse-temurin:8-jre-alpine
 - CSS 颜色相关注释 (背景颜色、主题颜色、颜色反转等) — 这些是真正的"颜色"
 - `data-intro` 中关于 SKU 多属性功能的说明文字 ("配置具体的颜色、尺码之类的组合") — 该功能描述的是 SKU 概念本身
 - 所有后端 Java 代码 — 数据库字段名 `color` 不变
+
+---
+
+## 改动 6: 商品列表批次号列
+
+**背景**: 商品信息是日常销售查询最高频的模块，需要快速看到每个物料的批次号分布。
+
+**实现方式**: Service 层后聚合（不改核心查询 SQL）
+
+### 后端改动
+
+| 文件 | 改动 |
+|---|---|
+| `MaterialVo4Unit.java` | 新增 `batchNumberStr`(String) 字段及 getter/setter |
+| `DepotItemMapperEx.java` | 新增 `getBatchSummaryByMaterialIds(List<Long> materialIds)` 接口 |
+| `DepotItemMapperEx.xml` | 新增 SQL: `GROUP_CONCAT(DISTINCT batch_number ORDER BY batch_number SEPARATOR ', ')` 按 materialId 聚合 |
+| `MaterialService.java` | `select()` 方法中调用聚合查询填充 `batchNumberStr`；新增 `getBatchSummaryMapByMaterialList()` 方法 |
+
+### 前端改动
+
+| 文件 | 改动 |
+|---|---|
+| `MaterialList.vue` | `defColumns` 新增 `{ title:'批次', dataIndex:'batchNumberStr', width:120, ellipsis:true }`；`defDataIndex` 默认显示 |
+
+### 显示效果
+
+| 物料 | 批次列显示 |
+|---|---|
+| ADXL345BCCZ-RL7（单批次） | `26+` |
+| EPM3512AFC256-7（多批次） | `12+13+` |
+| EP4CE40F23C8N（多批次） | `18+, 19+` |
+| 无批号物料 | 空白 |
+
+### 设计考量
+
+- **隔离性好**: 新查询独立于核心 `selectByConditionMaterial`，不影响分页性能
+- **批量查询**: 一次 SQL 查整页所有物料的批次，非逐行 N+1
+- **复用现有模式**: 与 `getCurrentStockMapByMaterialList` 相同的后处理模式
 
 ---
 
