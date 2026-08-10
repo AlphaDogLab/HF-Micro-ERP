@@ -1,0 +1,22 @@
+FROM maven:3.6.3-openjdk-8 AS builder
+WORKDIR /build
+# 使用阿里云 Maven 镜像加速
+COPY docker-config/settings.xml /root/.m2/settings.xml
+COPY jshERP-boot/pom.xml ./jshERP-boot/
+COPY jshERP-boot/src ./jshERP-boot/src
+WORKDIR /build/jshERP-boot
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:8-jre-alpine
+# 修复 AWT 字体渲染：验证码生成需要
+RUN apk add --no-cache libgcc fontconfig ttf-dejavu
+WORKDIR /app
+COPY --from=builder /build/jshERP-boot/target/*.jar app.jar
+
+# Docker-compose 网络中的 mysql/redis hostname
+COPY application-docker.yml ./
+
+RUN mkdir -p /opt/jshERP/upload /opt/jshERP/export /opt/tmp/tomcat
+
+EXPOSE 9999
+CMD ["java", "-Djava.awt.headless=true", "-jar", "-Dspring.config.location=application-docker.yml", "/app/app.jar"]

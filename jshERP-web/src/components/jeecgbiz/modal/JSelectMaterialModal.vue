@@ -53,8 +53,8 @@
             <template v-if="toggleSearchStatus">
               <a-row :gutter="24">
                 <a-col :md="6" :sm="8">
-                  <a-form-item label="颜色" :labelCol="{span: 5}" :wrapperCol="{span: 18, offset: 1}">
-                    <a-input placeholder="请输入颜色" v-model="queryParam.color"></a-input>
+                  <a-form-item label="封装" :labelCol="{span: 5}" :wrapperCol="{span: 18, offset: 1}">
+                    <a-input placeholder="请输入封装" v-model="queryParam.color"></a-input>
                   </a-form-item>
                 </a-col>
                 <a-col :md="6" :sm="8">
@@ -196,7 +196,7 @@
           {dataIndex: 'categoryName', title: '类别'},
           {dataIndex: 'standard', title: '规格'},
           {dataIndex: 'model', title: '型号'},
-          {dataIndex: 'color', title: '颜色'},
+          {dataIndex: 'color', title: '封装'},
           {dataIndex: 'brand', title: '品牌'},
           {dataIndex: 'mfrs', title: '制造商'},
           {dataIndex: 'unit', title: '单位'},

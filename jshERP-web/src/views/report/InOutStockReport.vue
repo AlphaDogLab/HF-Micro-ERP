@@ -218,7 +218,7 @@
           {title: '名称', dataIndex: 'materialName', width: 120, ellipsis:true},
           {title: '规格', dataIndex: 'materialStandard', width: 80, ellipsis:true},
           {title: '型号', dataIndex: 'materialModel', width: 80, ellipsis:true},
-          {title: '颜色', dataIndex: 'materialColor', width: 50, ellipsis:true},
+          {title: '封装', dataIndex: 'materialColor', width: 50, ellipsis:true},
           {title: '品牌', dataIndex: 'materialBrand', width: 80, ellipsis:true},
           {title: '制造商', dataIndex: 'materialMfrs', width: 80, ellipsis:true},
           {title: '扩展1', dataIndex: 'otherField1', width: 50, ellipsis:true},
@@ -336,7 +336,7 @@
       exportExcel() {
         let list = []
         let mpStr = getMpListShort(Vue.ls.get('materialPropertyList'))
-        let head = '条码,名称,规格,型号,颜色,品牌,制造商,' + mpStr + ',单位,成本价,上期结存数量,入库数量,出库数量,本期结存数量,结存金额'
+        let head = '条码,名称,规格,型号,封装,品牌,制造商,' + mpStr + ',单位,成本价,上期结存数量,入库数量,出库数量,本期结存数量,结存金额'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]

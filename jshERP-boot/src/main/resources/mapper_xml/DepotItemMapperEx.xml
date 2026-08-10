@@ -103,6 +103,8 @@
         <result column="batch_number" jdbcType="VARCHAR" property="batchNumber" />
         <result column="expiration_date" jdbcType="TIMESTAMP" property="expirationDate" />
         <result column="total_num" jdbcType="VARCHAR" property="totalNum" />
+        <result column="depot_id" jdbcType="BIGINT" property="depotId" />
+        <result column="depot_name" jdbcType="VARCHAR" property="depotName" />
     </resultMap>
 
     <resultMap id="materialSumMap" type="com.jsh.erp.datasource.entities.DepotItemVo4MaterialAndSum">
@@ -1026,15 +1028,24 @@
 
     <select id="getBatchNumberList" resultMap="batchNumberListMap">
         select id, bar_code, name, standard, model, unit_id,
-        commodity_unit, batch_number, expiration_date, sum(basic_number) total_num from
+        commodity_unit, batch_number, expiration_date, depot_id, depot_name,
+        sum(basic_number) total_num from
         (select di.batch_number id, me.bar_code, m.name, m.standard, m.model, m.unit_id,
          me.commodity_unit, di.batch_number,di.expiration_date,
+         di.depot_id, d.name depot_name,
          di.basic_number*(case dh.type when '入库' then 1 when '出库' then -1 end) as basic_number
         from jsh_depot_head dh
         left join jsh_depot_item di on dh.id=di.header_id
         left join jsh_material m on m.id=di.material_id and ifnull(m.delete_flag, '0') != '1'
         left join jsh_material_extend me on me.material_id=m.id and ifnull(me.delete_flag,'0') !='1'
-        where me.bar_code= #{barCode}
+        left join jsh_depot d on di.depot_id = d.id and ifnull(d.delete_flag,'0') !='1'
+        where 1=1
+        <if test="barCode != null">
+            and me.bar_code= #{barCode}
+        </if>
+        <if test="materialId != null">
+            and m.id= #{materialId}
+        </if>
         <if test="name != null">
             <bind name="bindName" value="'%'+name+'%'"/>
             and di.batch_number like #{bindName}
@@ -1057,9 +1068,9 @@
         and m.enable_batch_number =1
         and di.delete_flag!=1) tb
         group by id, bar_code, name, standard, model, unit_id,
-        commodity_unit, batch_number, expiration_date
+        commodity_unit, batch_number, expiration_date, depot_id, depot_name
         having sum(basic_number)>0
-        order by expiration_date asc
+        order by depot_name asc, batch_number asc
     </select>
 
     <select id="getCountByMaterialAndDepot" resultType="java.lang.Long">

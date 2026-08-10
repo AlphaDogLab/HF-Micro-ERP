@@ -17,6 +17,8 @@ public class DepotItemVoBatchNumberList {
     private Date expirationDate;
     private String expirationDateStr;
     private BigDecimal totalNum;
+    private Long depotId;
+    private String depotName;
 
     public String getId() {
         return id;
@@ -104,5 +106,21 @@ public class DepotItemVoBatchNumberList {
 
     public void setTotalNum(BigDecimal totalNum) {
         this.totalNum = totalNum;
+    }
+
+    public Long getDepotId() {
+        return depotId;
+    }
+
+    public void setDepotId(Long depotId) {
+        this.depotId = depotId;
+    }
+
+    public String getDepotName() {
+        return depotName;
+    }
+
+    public void setDepotName(String depotName) {
+        this.depotName = depotName;
     }
 }

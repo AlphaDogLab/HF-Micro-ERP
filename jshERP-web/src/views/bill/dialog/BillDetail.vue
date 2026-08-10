@@ -1252,7 +1252,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1277,7 +1277,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1301,7 +1301,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1318,7 +1318,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1342,7 +1342,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1371,7 +1371,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1399,7 +1399,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1424,7 +1424,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1453,7 +1453,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1482,7 +1482,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1507,7 +1507,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1532,7 +1532,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1556,7 +1556,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1577,7 +1577,7 @@
           { title: '名称', dataIndex: 'name'},
           { title: '规格', dataIndex: 'standard'},
           { title: '型号', dataIndex: 'model'},
-          { title: '颜色', dataIndex: 'color'},
+          { title: '封装', dataIndex: 'color'},
           { title: '品牌', dataIndex: 'brand'},
           { title: '制造商', dataIndex: 'mfrs'},
           { title: '扩展1', dataIndex: 'otherField1'},
@@ -1960,7 +1960,7 @@
       //零售出库|零售退货入库
       retailExportExcel() {
         let list = []
-        let head = '仓库名称,条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,备注'
+        let head = '仓库名称,条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,备注'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]
@@ -1975,7 +1975,7 @@
       //请购单
       applyExportExcel() {
         let list = []
-        let head = '条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',单位,多属性,原数量,已采购,数量,备注'
+        let head = '条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',单位,多属性,原数量,已采购,数量,备注'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]
@@ -1993,10 +1993,10 @@
         let head = ''
         if(this.billType === '采购订单') {
           organType = '供应商：'
-          head = '条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,多属性,数量,已采购,单价,金额,税率(%),税额,价税合计,备注'
+          head = '条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,多属性,数量,已采购,单价,金额,税率(%),税额,价税合计,备注'
         } else if(this.billType === '销售订单') {
           organType = '客户：'
-          head = '条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,多属性,数量,已采购,已销售,单价,金额,税率(%),税额,价税合计,备注'
+          head = '条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,多属性,数量,已采购,已销售,单价,金额,税率(%),税额,价税合计,备注'
         }
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
@@ -2023,7 +2023,7 @@
         } else if(this.billType === '销售出库' || this.billType === '销售退货入库') {
           organType = '客户：'
         }
-        let head = '仓库名称,条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,税率(%),税额,价税合计,重量,备注'
+        let head = '仓库名称,条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,税率(%),税额,价税合计,重量,备注'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]
@@ -2046,7 +2046,7 @@
         } else if(this.billType === '其它出库') {
           organType = '客户：'
         }
-        let head = '仓库名称,条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,备注'
+        let head = '仓库名称,条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,序列号,批号,有效期,多属性,数量,单价,金额,备注'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]
@@ -2061,7 +2061,7 @@
       //调拨出库
       allocationOutExportExcel() {
         let list = []
-        let head = '仓库名称,条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,调入仓库,单位,多属性,数量,单价,金额,备注'
+        let head = '仓库名称,条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,调入仓库,单位,多属性,数量,单价,金额,备注'
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]
@@ -2075,7 +2075,7 @@
       //组装单|拆卸单
       assembleExportExcel() {
         let list = []
-        let head = ['商品类型,仓库名称,条码,名称,规格,型号,颜色,' + this.otherFieldTitle + ',库存,单位,多属性,数量,单价,金额,备注']
+        let head = ['商品类型,仓库名称,条码,名称,规格,型号,封装,' + this.otherFieldTitle + ',库存,单位,多属性,数量,单价,金额,备注']
         for (let i = 0; i < this.dataSource.length; i++) {
           let item = []
           let ds = this.dataSource[i]

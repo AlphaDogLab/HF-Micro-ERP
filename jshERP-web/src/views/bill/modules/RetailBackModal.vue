@@ -239,7 +239,7 @@
             { title: '名称', key: 'name', width: '12%', type: FormTypes.normal },
             { title: '规格', key: 'standard', width: '10%', type: FormTypes.normal },
             { title: '型号', key: 'model', width: '10%', type: FormTypes.normal },
-            { title: '颜色', key: 'color', width: '5%', type: FormTypes.normal },
+            { title: '封装', key: 'color', width: '5%', type: FormTypes.normal },
             { title: '品牌', key: 'brand', width: '6%', type: FormTypes.normal },
             { title: '制造商', key: 'mfrs', width: '6%', type: FormTypes.normal },
             { title: '扩展1', key: 'otherField1', width: '4%', type: FormTypes.normal },

@@ -1314,10 +1314,11 @@ public class DepotItemService {
     }
 
     public List<DepotItemVoBatchNumberList> getBatchNumberList(String number, String name, Long depotId, String barCode,
-                                                               String batchNumber, Boolean forceFlag, Boolean inOutManageFlag) throws Exception {
+                                                               String batchNumber, Boolean forceFlag, Boolean inOutManageFlag,
+                                                               Long materialId) throws Exception {
         List<DepotItemVoBatchNumberList> reslist = new ArrayList<>();
         List<DepotItemVoBatchNumberList> list =  depotItemMapperEx.getBatchNumberList(StringUtil.toNull(number), name,
-                depotId, barCode, batchNumber, forceFlag, inOutManageFlag);
+                depotId, barCode, batchNumber, forceFlag, inOutManageFlag, materialId);
         for(DepotItemVoBatchNumberList bn: list) {
             if(bn.getTotalNum()!=null && bn.getTotalNum().compareTo(BigDecimal.ZERO)>0) {
                 bn.setExpirationDateStr(Tools.parseDateToStr(bn.getExpirationDate()));
@@ -1345,7 +1346,7 @@ public class DepotItemService {
         Boolean forceFlag = systemConfigService.getForceApprovalFlag();
         Boolean inOutManageFlag = systemConfigService.getInOutManageFlag();
         List<DepotItemVoBatchNumberList> list =  depotItemMapperEx.getBatchNumberList(null, null,
-                depotId, barCode, batchNumber, forceFlag, inOutManageFlag);
+                depotId, barCode, batchNumber, forceFlag, inOutManageFlag, null);
         if(list!=null && list.size()>0) {
             DepotItemVoBatchNumberList bn = list.get(0);
             totalNum = bn.getTotalNum();

@@ -1057,10 +1057,11 @@ public class DepotItemController {
     @GetMapping(value = "/getBatchNumberList")
     @ApiOperation(value = "获取批次商品列表信息")
     public BaseResponseInfo getBatchNumberList(@RequestParam("name") String name,
-                                               @RequestParam("depotItemId") Long depotItemId,
-                                               @RequestParam("depotId") Long depotId,
-                                               @RequestParam("barCode") String barCode,
+                                               @RequestParam(value = "depotItemId", required = false) Long depotItemId,
+                                               @RequestParam(value = "depotId", required = false) Long depotId,
+                                               @RequestParam(value = "barCode", required = false) String barCode,
                                                @RequestParam(value = "batchNumber", required = false) String batchNumber,
+                                               @RequestParam(value = "materialId", required = false) Long materialId,
                                                HttpServletRequest request) throws Exception{
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<>();
@@ -1073,7 +1074,7 @@ public class DepotItemController {
             Boolean forceFlag = systemConfigService.getForceApprovalFlag();
             Boolean inOutManageFlag = systemConfigService.getInOutManageFlag();
             List<DepotItemVoBatchNumberList> list = depotItemService.getBatchNumberList(number, name, depotId, barCode,
-                    batchNumber, forceFlag, inOutManageFlag);
+                    batchNumber, forceFlag, inOutManageFlag, materialId);
             map.put("rows", list);
             map.put("total", list.size());
             res.code = 200;

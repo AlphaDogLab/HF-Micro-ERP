@@ -19,8 +19,8 @@
         <a-form :form="form">
           <a-row class="form-row" :gutter="24">
             <a-col :md="8" :sm="24">
-              <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="颜色">
-                <a-input placeholder="请输入颜色" v-decorator.trim="[ 'color' ]" />
+              <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="封装">
+                <a-input placeholder="请输入封装" v-decorator.trim="[ 'color' ]" />
               </a-form-item>
             </a-col>
             <a-col :md="8" :sm="24">

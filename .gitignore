@@ -8,3 +8,13 @@
 
 ## front
 **/*.lock
+
+## docker runtime (do not commit data volumes)
+mysql_data/
+export/
+upload/
+dist/
+**/.env
+
+## generated/imported
+scripts/import.sql

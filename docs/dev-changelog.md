@@ -1,0 +1,152 @@
+# 管伊佳ERP 二次开发记录
+
+> 基于原版 [jshERP v3.6-SNAPSHOT](https://github.com/jishenghua/jshERP) 的定制化修改
+
+---
+
+## 修改总览
+
+| # | 改动项 | 日期 | 涉及范围 |
+|---|---|---|---|
+| 1 | Docker 化部署 | 2026-08-10 | 基建 |
+| 2 | 修复 AWT 验证码异常 | 2026-08-10 | 后端 |
+| 3 | 批号功能默认开启 | 2026-08-10 | 前端 |
+| 4 | 库存批次明细视图 | 2026-08-10 | 前后端 |
+| 5 | 颜色字段改为封装 | 2026-08-10 | 前端 (全站) |
+
+---
+
+## 改动 1: Docker 化部署
+
+**背景**: 原项目无 Docker 支持，需要手动安装 MySQL、Redis、JDK、编译前后端。
+
+**修改文件**:
+
+| 文件 | 类型 | 说明 |
+|---|---|---|
+| `docker-compose.yml` | 新建 | 4个服务编排: MySQL 8 + Redis 6.2 + 后端 + 前端 |
+| `Dockerfile.backend` | 新建 | 多阶段构建: Maven 3.6.3 编译 → OpenJDK 8 JRE 运行 |
+| `Dockerfile.frontend` | 新建 | 多阶段构建: Node 20 编译 → Nginx 1.21 运行 |
+| `default.conf` | 新建 | Nginx 代理配置 (/jshERP-boot/ → 后端:9999) |
+| `application-docker.yml` | 新建 | Docker 网络环境配置，覆盖默认 application.yml |
+| `docker-config/settings.xml` | 新建 | Maven 阿里云镜像加速 |
+
+**关键配置**:
+- MySQL 连接: `allowPublicKeyRetrieval=true` (MySQL 8 必须)
+- Redis 密码: `1234abcd`
+- 后端端口: `9999`，前端端口: `3000`
+- 数据持久化: `mysql_data/`、`upload/`、`export/` 目录外挂
+
+---
+
+## 改动 2: 修复 AWT 验证码异常
+
+**问题**: 登录页报"未知异常"，后端日志 `java.lang.NoClassDefFoundError: Could not initialize class sun.awt.X11FontManager`
+
+**根因**: `eclipse-temurin:8-jre-alpine` 容器缺少 `libgcc`、`fontconfig`、`ttf-dejavu`，导致 Java AWT 字体渲染失败，验证码图片无法生成。
+
+**修改文件**: `Dockerfile.backend`
+
+```diff
+FROM eclipse-temurin:8-jre-alpine
++ RUN apk add --no-cache libgcc fontconfig ttf-dejavu
+
+- CMD ["java", "-jar", ...]
++ CMD ["java", "-Djava.awt.headless=true", "-jar", ...]
+```
+
+---
+
+## 改动 3: 批号功能默认开启
+
+**背景**: 电子元器件行业每个物料都需要批号管理，手动每次开启太麻烦。
+
+**修改文件**: `jshERP-web/src/views/material/modules/MaterialModal.vue`
+
+```diff
+- this.edit({})
++ this.edit({ enableBatchNumber: '1' })
+```
+
+**影响范围**: 仅新建商品弹窗，默认选中"有"。
+
+---
+
+## 改动 4: 库存批次明细视图
+
+**背景**: 系统原库存报表只有仓库维度汇总，没有批次维度。电子元器件行业需要查看同一物料的不同批次库存分布。
+
+### 后端改动
+
+| 文件 | 改动 |
+|---|---|
+| `DepotItemVoBatchNumberList.java` | 新增 `depotId`(Long)、`depotName`(String) 字段及 getter/setter |
+| `DepotItemMapperEx.xml` - `batchNumberListMap` | 新增 `depot_id`、`depot_name` 映射 |
+| `DepotItemMapperEx.xml` - `getBatchNumberList` | 新增 `materialId` 参数; `barCode` 改为可选; 新增 JOIN `jsh_depot`; GROUP BY 加仓库维度; ORDER BY 改为仓库+批次 |
+| `DepotItemMapperEx.java` | Mapper 接口新增 `@Param("materialId") Long materialId` |
+| `DepotItemService.java` | `getBatchNumberList()` 方法签名新增 `Long materialId` 参数，透传; `getOneBatchNumberStock()` 调用处补 `null` |
+| `DepotItemController.java` | 接口新增可选参数 `materialId`; `barCode`/`depotId`/`depotItemId` 改为可选 |
+
+### 前端改动
+
+**修改文件**: `jshERP-web/src/views/report/modules/MaterialDepotStockList.vue`
+
+- 仓库汇总表增加可展开行 (`expandedRowRender`)
+- 点击展开后调用 `/depotItem/getBatchNumberList?materialId=xxx&depotId=xxx` 获取批次数据
+- 展开区域显示批次明细表: 批次号、库存数量、单位、条码
+- 支持缓存策略：已加载的仓库不会重复请求
+
+**影响范围**:
+- 库存报表 → 库存详情弹窗 → 点击展开仓库行即可看到批次明细
+- 原有出库选批次功能不受影响（`barCode` 参数仍支持）
+
+---
+
+## 改动 5: 颜色字段改为封装
+
+**背景**: 电子元器件行业不需要"颜色"，但需要"封装"（如 0603、SOT-23、LQFP-48）。
+
+**原则**: 仅改前端 UI 标签，不改数据库字段名 (`color` 列保留)，不改后端 API 字段名。
+
+### 修改文件清单 (约27个文件, ~60处)
+
+**商品模块 (4个文件)**:
+
+| 文件 | 改动处 |
+|---|---|
+| `MaterialList.vue` | 列头 `title: '颜色'` → `'封装'`；搜索框 label + placeholder |
+| `MaterialModal.vue` | 表单 label + placeholder + data-intro 提示文字 + 注释 |
+| `BatchSetInfoModal.vue` | 表单 label + placeholder |
+| `JSelectMaterialModal.vue` | 列头 + 搜索框 label + placeholder |
+
+**单据 Mixins (3个文件)**:
+
+| 文件 | 改动处 |
+|---|---|
+| `BillListMixin.js` | 13处 `{ title: '颜色', dataIndex: 'color'}` → `'封装'` |
+| `BillModalMixin.js` | 1处注释 `型号、颜色、扩展信息` → `封装` |
+| `BillDetail.vue` | 14处列头 + 8处导出表头 `,颜色,` → `,封装,` |
+
+**单据弹窗 (14个文件)**:
+
+`PurchaseOrderModal`、`SaleOrderModal`、`PurchaseInModal`、`SaleOutModal`、`PurchaseBackModal`、`SaleBackModal`、`RetailOutModal`、`RetailBackModal`、`OtherInModal`、`OtherOutModal`、`AssembleModal`、`DisassembleModal`、`AllocationOutModal`、`PurchaseApplyModal` — 各 1 处列头
+
+**报表 (11个文件)**:
+
+`MaterialStock`、`InDetail`、`OutDetail`、`InMaterialCount`、`OutMaterialCount`、`AllocationDetail`、`StockWarningReport`、`BuyInReport`、`SaleOutReport`、`InOutStockReport`、`RetailOutReport` — 各 1 处列头 + 1 处导出表头
+
+### 未改动的地方
+
+- CSS 颜色相关注释 (背景颜色、主题颜色、颜色反转等) — 这些是真正的"颜色"
+- `data-intro` 中关于 SKU 多属性功能的说明文字 ("配置具体的颜色、尺码之类的组合") — 该功能描述的是 SKU 概念本身
+- 所有后端 Java 代码 — 数据库字段名 `color` 不变
+
+---
+
+## 后续可能的改动
+
+- [ ] 批号与有效期解耦（当前开启批号强制显示有效期，需改 `BillModalMixin.js`）
+- [ ] 数据库 `color` 字段注释改为"封装"（可选，影响小）
+- [ ] 扩展字段1/2/3改为行业常用字段名（如"ESD等级"、"RoHS"等）
+- [ ] 型号 → 料号（前端标签全局替换，与颜色→封装同理）
+- [ ] 出库批号从弹窗选择改为自由文本输入（目前为食品/药品设计的按有效期选择模式）

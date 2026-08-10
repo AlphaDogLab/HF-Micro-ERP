@@ -230,7 +230,7 @@
           {title: '名称', dataIndex: 'name', width: 140, ellipsis:true},
           {title: '规格', dataIndex: 'standard', width: 100, ellipsis:true},
           {title: '型号', dataIndex: 'model', width: 100, ellipsis:true},
-          {title: '颜色', dataIndex: 'color', width: 60, ellipsis:true},
+          {title: '封装', dataIndex: 'color', width: 60, ellipsis:true},
           {title: '品牌', dataIndex: 'brand', width: 100, ellipsis:true},
           {title: '制造商', dataIndex: 'mfrs', width: 100, ellipsis:true},
           {title: '类别', dataIndex: 'categoryName', width: 60, ellipsis:true},

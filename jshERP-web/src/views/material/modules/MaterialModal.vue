@@ -65,9 +65,9 @@
             </a-row>
             <a-row class="form-row" :gutter="24">
               <a-col :md="6" :sm="24">
-                <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="颜色" data-step="5" data-title="颜色"
-                             data-intro="请填写商品的颜色，如果是多属性商品可以不填（下面有多属性开关）">
-                  <a-input placeholder="请输入颜色" v-decorator.trim="[ 'color' ]" />
+                <a-form-item :labelCol="labelCol" :wrapperCol="wrapperCol" label="封装" data-step="5" data-title="封装"
+                             data-intro="请填写商品的封装，如果是多属性商品可以不填（下面有多属性开关）">
+                  <a-input placeholder="请输入封装" v-decorator.trim="[ 'color' ]" />
                 </a-form-item>
               </a-col>
               <a-col :md="6" :sm="24">
@@ -483,7 +483,7 @@
         this.getAllTable().then(editableTables => {
           editableTables[0].add()
         })
-        this.edit({})
+        this.edit({ enableBatchNumber: '1' })
         this.$nextTick(() => {
           handleIntroJs('material', 11)
         })
@@ -675,7 +675,7 @@
           this.$message.warning('抱歉，多属性商品不能勾选多单位，请切换为单个单位！');
           return;
         }
-        //校验商品是否存在，通过校验商品的名称、型号、规格、颜色、单位、制造商等
+        //校验商品是否存在，通过校验商品的名称、型号、规格、封装、单位、制造商等
         let param = {
           id: this.model.id?this.model.id:0,
           name: this.model.name,

@@ -44,8 +44,8 @@
                   </a-form-item>
                 </a-col>
                 <a-col :md="6" :sm="24">
-                  <a-form-item label="颜色" :labelCol="labelCol" :wrapperCol="wrapperCol">
-                    <a-input placeholder="请输入颜色查询" v-model="queryParam.color"></a-input>
+                  <a-form-item label="封装" :labelCol="labelCol" :wrapperCol="wrapperCol">
+                    <a-input placeholder="请输入封装查询" v-model="queryParam.color"></a-input>
                   </a-form-item>
                 </a-col>
                 <a-col :md="6" :sm="24">
@@ -304,7 +304,7 @@
           {title: '名称', dataIndex: 'name', width: 160, scopedSlots: { customRender: 'customName' }},
           {title: '规格', dataIndex: 'standard', width: 120},
           {title: '型号', dataIndex: 'model', width: 120},
-          {title: '颜色', dataIndex: 'color', width: 70, ellipsis:true},
+          {title: '封装', dataIndex: 'color', width: 70, ellipsis:true},
           {title: '品牌', dataIndex: 'brand', width: 100, ellipsis:true},
           {title: '助记码', dataIndex: 'mnemonic', width: 80, ellipsis:true},
           {title: '类别', dataIndex: 'categoryName', width: 100, ellipsis:true},
