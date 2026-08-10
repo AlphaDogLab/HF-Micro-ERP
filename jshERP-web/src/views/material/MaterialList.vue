@@ -289,7 +289,7 @@
         columns:[],
         // 默认索引
         defDataIndex:['action','mBarCode','name','standard','model','color','categoryName','unit', 'stock',
-          'purchaseDecimal','commodityDecimal','wholesaleDecimal','lowDecimal','enabled'],
+          'batchNumberStr', 'purchaseDecimal','commodityDecimal','wholesaleDecimal','lowDecimal','enabled'],
         // 默认列
         defColumns: [
           {
@@ -332,6 +332,7 @@
           {title: '库存', dataIndex: 'stock', width: 80,
             scopedSlots: { customRender: 'customRenderStock' }
           },
+          {title: '批次', dataIndex: 'batchNumberStr', width: 120, ellipsis:true},
           {title: '采购价', dataIndex: 'purchaseDecimal', width: 80},
           {title: '零售价', dataIndex: 'commodityDecimal', width: 80},
           {title: '销售价', dataIndex: 'wholesaleDecimal', width: 80},

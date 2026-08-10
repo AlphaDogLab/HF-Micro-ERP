@@ -60,6 +60,8 @@ public class MaterialVo4Unit extends Material{
 
     private String imgLarge;
 
+    private String batchNumberStr;
+
     private BigDecimal taxRate;
 
     private BigDecimal taxMoney;
@@ -264,6 +266,14 @@ public class MaterialVo4Unit extends Material{
 
     public void setBigUnitInitialStock(String bigUnitInitialStock) {
         this.bigUnitInitialStock = bigUnitInitialStock;
+    }
+
+    public String getBatchNumberStr() {
+        return batchNumberStr;
+    }
+
+    public void setBatchNumberStr(String batchNumberStr) {
+        this.batchNumberStr = batchNumberStr;
     }
 
     public BigDecimal getTaxRate() {

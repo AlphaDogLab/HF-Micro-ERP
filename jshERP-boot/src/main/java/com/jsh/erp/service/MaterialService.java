@@ -139,6 +139,7 @@ public class MaterialService {
             if (null != list && list.size()>0) {
                 Map<Long,BigDecimal> initialStockMap = getInitialStockMapByMaterialList(list);
                 Map<Long,BigDecimal> currentStockMap = getCurrentStockMapByMaterialList(list);
+                Map<Long,String> batchSummaryMap = getBatchSummaryMapByMaterialList(list);
                 for (MaterialVo4Unit m : list) {
                     if(fileUploadType == 2) {
                         m.setImgSmall("small");
@@ -149,6 +150,7 @@ public class MaterialService {
                     m.setBigUnitInitialStock(getBigUnitStock(m.getInitialStock(), m.getUnitId()));
                     m.setStock(currentStockMap.get(m.getId())!=null? currentStockMap.get(m.getId()): BigDecimal.ZERO);
                     m.setBigUnitStock(getBigUnitStock(m.getStock(), m.getUnitId()));
+                    m.setBatchNumberStr(batchSummaryMap.getOrDefault(m.getId(), ""));
                 }
             }
         } catch(Exception e){
@@ -1298,6 +1300,29 @@ public class MaterialService {
         List<MaterialCurrentStock> mcsList = materialCurrentStockMapperEx.getCurrentStockMapByIdList(materialIdList);
         for(MaterialCurrentStock materialCurrentStock: mcsList) {
             map.put(materialCurrentStock.getMaterialId(), materialCurrentStock.getCurrentNumber());
+        }
+        return map;
+    }
+
+    /**
+     * 批量获取物料的批次号聚合信息
+     */
+    public Map<Long,String> getBatchSummaryMapByMaterialList(List<MaterialVo4Unit> list) {
+        Map<Long,String> map = new HashMap<>();
+        if(list == null || list.isEmpty()) {
+            return map;
+        }
+        List<Long> materialIdList = new ArrayList<>();
+        for(MaterialVo4Unit m : list) {
+            materialIdList.add(m.getId());
+        }
+        List<MaterialVo4Unit> batchList = depotItemMapperEx.getBatchSummaryByMaterialIds(materialIdList);
+        if(batchList != null) {
+            for(MaterialVo4Unit b : batchList) {
+                if(b.getId() != null && b.getBatchNumberStr() != null) {
+                    map.put(b.getId(), b.getBatchNumberStr());
+                }
+            }
         }
         return map;
     }

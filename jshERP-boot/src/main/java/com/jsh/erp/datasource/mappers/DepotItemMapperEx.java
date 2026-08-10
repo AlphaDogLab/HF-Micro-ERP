@@ -261,4 +261,9 @@ public interface DepotItemMapperEx {
             @Param("meId") Long meId,
             @Param("type") String type,
             @Param("subType") String subType);
+
+    /**
+     * 批量获取物料的批次号聚合信息
+     */
+    List<MaterialVo4Unit> getBatchSummaryByMaterialIds(@Param("materialIds") List<Long> materialIds);
 }

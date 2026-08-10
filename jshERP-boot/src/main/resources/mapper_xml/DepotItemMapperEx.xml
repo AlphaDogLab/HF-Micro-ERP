@@ -1161,4 +1161,19 @@
         limit 0,1
     </select>
 
+    <!-- 批量获取物料批次号聚合：materialId → 批号列表 -->
+    <select id="getBatchSummaryByMaterialIds" resultType="com.jsh.erp.datasource.entities.MaterialVo4Unit">
+        SELECT di.material_id AS id,
+               GROUP_CONCAT(DISTINCT di.batch_number ORDER BY di.batch_number ASC SEPARATOR ', ') AS batchNumberStr
+        FROM jsh_depot_item di
+        WHERE di.material_id IN
+        <foreach collection="materialIds" item="mid" index="index" separator="," open="(" close=")">
+            #{mid}
+        </foreach>
+          AND di.delete_flag != '1'
+          AND di.batch_number IS NOT NULL
+          AND di.batch_number != ''
+        GROUP BY di.material_id
+    </select>
+
 </mapper>
