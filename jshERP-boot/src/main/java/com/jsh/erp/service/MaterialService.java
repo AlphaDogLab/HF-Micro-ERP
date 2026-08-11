@@ -73,6 +73,10 @@ public class MaterialService {
     private SystemConfigService systemConfigService;
     @Resource
     private RoleService roleService;
+    @Resource
+    private DepotHeadMapper depotHeadMapper;
+    @Resource
+    private DepotItemMapper depotItemMapper;
 
     @Value(value="${file.uploadType}")
     private Long fileUploadType;
@@ -506,7 +510,7 @@ public class MaterialService {
             otherField = mpList;
         }
         String nameStr = "名称*,规格,型号,颜色,品牌,类别,基础重量(kg),保质期(天),基本单位*,副单位,基本条码*,副条码,比例,多属性," +
-                "采购价,零售价,销售价,最低售价,状态*,序列号,批号,仓位货架,制造商," + otherField + ",备注";
+                "采购价,零售价,销售价,最低售价,状态*,序列号,批号,仓位货架,制造商," + otherField + ",备注,批号";
         List<String> nameList = StringUtil.strToStringList(nameStr);
         //仓库列表
         List<Depot> depotList = depotService.getAllList();
@@ -555,8 +559,9 @@ public class MaterialService {
                 objs[24] = m.getOtherField2();
                 objs[25] = m.getOtherField3();
                 objs[26] = m.getRemark();
+                objs[27] = "";
                 //仓库期初库存
-                int i = 27;
+                int i = 28;
                 for(Depot depot: depotList) {
                     BigDecimal number = misMap.get(m.getId() + "_" + depot.getId());
                     objs[i] = number == null ? BigDecimal.ZERO : number.setScale(2, BigDecimal.ROUND_HALF_UP);
@@ -678,12 +683,14 @@ public class MaterialService {
                 String otherField2 = ExcelUtils.getContent(src, i, 24); //自定义2
                 String otherField3 = ExcelUtils.getContent(src, i, 25); //自定义3
                 String remark = ExcelUtils.getContent(src, i, 26); //备注
+                String batchNumber = ExcelUtils.getContent(src, i, 27); //批号（导入值）
                 m.setPosition(StringUtil.isNotEmpty(position)?position:null);
                 m.setMfrs(StringUtil.isNotEmpty(mfrs)?mfrs:null);
                 m.setOtherField1(StringUtil.isNotEmpty(otherField1)?otherField1:null);
                 m.setOtherField2(StringUtil.isNotEmpty(otherField2)?otherField2:null);
                 m.setOtherField3(StringUtil.isNotEmpty(otherField3)?otherField3:null);
                 m.setRemark(remark);
+                m.setBatchNumber(StringUtil.isNotEmpty(batchNumber) ? batchNumber.trim() : null);
                 //状态格式错误
                 if(!"1".equals(enabled) && !"0".equals(enabled)) {
                     throw new BusinessRunTimeException(ExceptionConstants.MATERIAL_ENABLED_ERROR_CODE,
@@ -770,6 +777,9 @@ public class MaterialService {
             //防止初始库存和当前库存出现重复
             Map<String, String> materialDepotInitialMap = new HashMap<>();
             Map<String, String> materialDepotCurrentMap = new HashMap<>();
+            boolean hasBatchStock = false;
+            List<DepotItem> batchDepotItems = new ArrayList<>();
+            Map<Long, String> materialUnitMap = new HashMap<>();
             for(MaterialWithInitStock m: mList) {
                 Long mId = 0L;
                 //判断该商品是否存在，如果不存在就新增，如果存在就更新
@@ -797,8 +807,50 @@ public class MaterialService {
                 JSONObject materialExObj = m.getMaterialExObj();
                 insertOrUpdateMaterialExtend(materialExObj, "basic", "1", mId, user);
                 insertOrUpdateMaterialExtend(materialExObj, "other", "0", mId, user);
+                //记录物料单位（用于后续 depot_item 创建）
+                materialUnitMap.put(mId, StringUtil.isNotEmpty(m.getUnit()) ? m.getUnit() : "个");
                 //给商品更新库存
                 Map<Long, BigDecimal> stockMap = m.getStockMap();
+                //当前库存：有批号则通过 depot_item 创建，无批号走原逻辑
+                String batchNumber = m.getBatchNumber();
+                if (StringUtil.isNotEmpty(batchNumber)) {
+                    hasBatchStock = true;
+                    for (Depot depot : depotList) {
+                        Long depotId = depot.getId();
+                        String materialDepotKey = mId + "_" + depotId;
+                        BigDecimal initStock = getInitStock(mId, depotId);
+                        BigDecimal stock = stockMap.get(depotId);
+                        //初始库存保持不变
+                        if (stock != null && stock.compareTo(BigDecimal.ZERO) != 0) {
+                            String basicStr = materialExObj.getString("basic");
+                            MaterialExtend materialExtend = JSONObject.parseObject(basicStr, MaterialExtend.class);
+                            if (StringUtil.isNotEmpty(materialExtend.getSku())) {
+                                throw new BusinessRunTimeException(ExceptionConstants.MATERIAL_SKU_BEGIN_STOCK_FAILED_CODE,
+                                        String.format(ExceptionConstants.MATERIAL_SKU_BEGIN_STOCK_FAILED_MSG, materialExtend.getBarCode()));
+                            }
+                            buildChangeInitialStock(deleteInitialStockMaterialIdList, insertInitialStockMaterialList, materialDepotInitialMap, mId, depotId, materialDepotKey, stock);
+                        } else {
+                            if (initStock != null && initStock.compareTo(BigDecimal.ZERO) != 0) {
+                                buildChangeInitialStock(deleteInitialStockMaterialIdList, insertInitialStockMaterialList, materialDepotInitialMap, mId, depotId, materialDepotKey, stock);
+                            }
+                        }
+                        //有库存则创建 depot_item（含批号），跳过直接写 current_stock
+                        if (stock != null && stock.compareTo(BigDecimal.ZERO) > 0) {
+                            DepotItem di = new DepotItem();
+                            di.setMaterialId(mId);
+                            di.setDepotId(depotId);
+                            di.setOperNumber(stock);
+                            di.setBasicNumber(stock);
+                            di.setBatchNumber(batchNumber);
+                            di.setUnitPrice(BigDecimal.ZERO);
+                            di.setAllPrice(BigDecimal.ZERO);
+                            di.setDeleteFlag("0");
+                            batchDepotItems.add(di);
+                        }
+                    }
+                    continue;
+                }
+                //无批号：走原有逻辑
                 for(Depot depot: depotList){
                     Long depotId = depot.getId();
                     String materialDepotKey = mId + "_" + depotId;
@@ -840,7 +892,85 @@ public class MaterialService {
                     }
                 }
             }
-            //批量更新库存,先删除后新增
+            // 批次数据处理：创建期初入库单据 + depot_item + 更新 current_stock
+            if (hasBatchStock) {
+                String billNumber = "QC" + new java.text.SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+                DepotHead depotHead = new DepotHead();
+                depotHead.setType("入库");
+                depotHead.setSubType("期初");
+                depotHead.setNumber(billNumber);
+                depotHead.setOperTime(new Date());
+                depotHead.setTotalPrice(BigDecimal.ZERO);
+                depotHead.setStatus("1");
+                depotHead.setSource("0");
+                depotHead.setDeleteFlag("0");
+                depotHeadMapper.insertSelective(depotHead);
+                // 通过单号查询获取自动生成的 ID（与 addDepotHeadAndDetail 相同方式）
+                DepotHeadExample dhExample = new DepotHeadExample();
+                dhExample.createCriteria().andNumberEqualTo(billNumber).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
+                List<DepotHead> dhList = depotHeadMapper.selectByExample(dhExample);
+                Long headerId = dhList.get(0).getId();
+                // 清理同物料+仓库的旧期初 depot_items，防止货盘表更新后旧批次残留
+                Set<String> importedBatchKeys = new LinkedHashSet<>();
+                for (DepotItem di : batchDepotItems) {
+                    importedBatchKeys.add(di.getMaterialId() + "_" + di.getDepotId());
+                }
+                for (String key : importedBatchKeys) {
+                    String[] parts = key.split("_");
+                    Long mId = Long.parseLong(parts[0]);
+                    Long dId = Long.parseLong(parts[1]);
+                    DepotItemExample oldEx = new DepotItemExample();
+                    oldEx.createCriteria().andMaterialIdEqualTo(mId).andDepotIdEqualTo(dId)
+                            .andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
+                    List<DepotItem> oldItems = depotItemMapper.selectByExample(oldEx);
+                    for (DepotItem old : oldItems) {
+                        if (old.getHeaderId() != null) {
+                            DepotHead oldHead = depotHeadMapper.selectByPrimaryKey(old.getHeaderId());
+                            if (oldHead != null && "期初".equals(oldHead.getSubType())) {
+                                depotItemMapper.deleteByPrimaryKey(old.getId());
+                            }
+                        }
+                    }
+                }
+                // 批量写入 depot_item（逐条 insert，确保字段完整）
+                Map<Long, Long> materialExtendIdCache = new HashMap<>();
+                for (DepotItem di : batchDepotItems) {
+                    di.setHeaderId(headerId);
+                    // 缓存 materialExtendId
+                    Long meId = materialExtendIdCache.get(di.getMaterialId());
+                    if (meId == null) {
+                        meId = materialExtendService.selectIdByMaterialIdAndDefaultFlag(di.getMaterialId(), "1");
+                        materialExtendIdCache.put(di.getMaterialId(), meId);
+                    }
+                    di.setMaterialExtendId(meId);
+                    di.setMaterialUnit(materialUnitMap.get(di.getMaterialId()));
+                    depotItemMapper.insertSelective(di);
+                }
+                // 重算当前库存：直接 SET（不用 updateCurrentStockFun，避免重复加 initial_stock）
+                Map<String, BigDecimal> batchStockMap = new LinkedHashMap<>();
+                for (DepotItem di : batchDepotItems) {
+                    String key = di.getMaterialId() + "_" + di.getDepotId();
+                    BigDecimal current = batchStockMap.getOrDefault(key, BigDecimal.ZERO);
+                    batchStockMap.put(key, current.add(
+                            di.getBasicNumber() != null ? di.getBasicNumber() : di.getOperNumber()));
+                }
+                for (Map.Entry<String, BigDecimal> entry : batchStockMap.entrySet()) {
+                    String[] parts = entry.getKey().split("_");
+                    Long mId = Long.parseLong(parts[0]);
+                    Long dId = Long.parseLong(parts[1]);
+                    MaterialCurrentStockExample csExample = new MaterialCurrentStockExample();
+                    csExample.createCriteria().andMaterialIdEqualTo(mId).andDepotIdEqualTo(dId)
+                            .andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
+                    materialCurrentStockMapper.deleteByExample(csExample);
+                    MaterialCurrentStock mcs = new MaterialCurrentStock();
+                    mcs.setMaterialId(mId);
+                    mcs.setDepotId(dId);
+                    mcs.setCurrentNumber(entry.getValue());
+                    mcs.setDeleteFlag("0");
+                    materialCurrentStockMapper.insertSelective(mcs);
+                }
+            }
+            //批量更新 initial_stock, 先删除后新增
             if(insertInitialStockMaterialList.size()>0) {
                 batchDeleteInitialStockByMaterialList(deleteInitialStockMaterialIdList);
                 materialInitialStockMapperEx.batchInsert(insertInitialStockMaterialList);
@@ -909,17 +1039,11 @@ public class MaterialService {
 
     /**
      * 缓存各个仓库的库存信息
-     * @param src
-     * @param depotCount
-     * @param depotMap
-     * @param i
-     * @return
-     * @throws Exception
      */
     private Map<Long, BigDecimal> getStockMapCache(Sheet src, int depotCount, Map<String, Long> depotMap, int i) throws Exception {
         Map<Long, BigDecimal> stockMap = new HashMap<>();
         for(int j = 1; j<= depotCount; j++) {
-            int col = 26 + j;
+            int col = 27 + j;
             if(col < src.getColumns()){
                 String depotName = ExcelUtils.getContent(src, 1, col); //获取仓库名称
                 if(StringUtil.isNotEmpty(depotName)) {

@@ -9,6 +9,8 @@ public class MaterialWithInitStock extends Material {
 
     private Map<Long, BigDecimal> stockMap;
 
+    private String batchNumber;
+
     private JSONObject materialExObj;
 
     public Map<Long, BigDecimal> getStockMap() {
@@ -17,6 +19,14 @@ public class MaterialWithInitStock extends Material {
 
     public void setStockMap(Map<Long, BigDecimal> stockMap) {
         this.stockMap = stockMap;
+    }
+
+    public String getBatchNumber() {
+        return batchNumber;
+    }
+
+    public void setBatchNumber(String batchNumber) {
+        this.batchNumber = batchNumber;
     }
 
     public JSONObject getMaterialExObj() {

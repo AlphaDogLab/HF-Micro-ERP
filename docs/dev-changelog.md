@@ -14,6 +14,8 @@
 | 4 | 库存批次明细视图 | 2026-08-10 | 前后端 |
 | 5 | 颜色字段改为封装 | 2026-08-10 | 前端 (全站) |
 | 6 | **商品列表批次号列** | 2026-08-10 | 前后端 |
+| 7 | **importExcel 支持批次号导入** | 2026-08-11 | 后端 |
+| 8 | SQL 导入脚本修复 | 2026-08-11 | 脚本 |
 
 ---
 
@@ -179,6 +181,70 @@ FROM eclipse-temurin:8-jre-alpine
 - **隔离性好**: 新查询独立于核心 `selectByConditionMaterial`，不影响分页性能
 - **批量查询**: 一次 SQL 查整页所有物料的批次，非逐行 N+1
 - **复用现有模式**: 与 `getCurrentStockMapByMaterialList` 相同的后处理模式
+
+---
+
+## 改动 7: importExcel 支持批次号导入
+
+### 背景
+
+商品物料导入 (`POST /material/importExcel`) 原有的"批号"列 (col 20) 仅支持设置 `enableBatchNumber` 开关 (0/1)，不支持导入具体批号值（如 `22+`、`25+` 等）。
+
+实际业务需求：期初现货导入时需要将每个型号的批号值（`22+`）连同数量（4500）一起写入系统，形成 `depot_head` (期初入库单据) + `depot_item` (含批次号) 的完整记录。
+
+### 改动方案
+
+在 Excel 模板中新增独立"批号"列 (col 27)，仓库库存列整体右移一位 (28+)。导入时：
+
+```
+批号列有值（如 "22+"）→ 创建 depot_head (期初入库) + depot_item (含 batch_number) + 直接 SET current_stock
+批号列为空 → 保持原有逻辑（直接 SET current_stock，不创建单据），完全向后兼容
+```
+
+### 后端改动
+
+| 文件 | 改动 |
+|---|---|
+| `MaterialWithInitStock.java` | 新增 `batchNumber`(String) 字段，删除旧的 `BatchStock` 内部类和 `batchStockMap` |
+| `MaterialService.exportExcel()` | 模板新增"批号"列 (col 27)，仓库库存列从 27 移至 28+ |
+| `MaterialService.importExcel()` | 解析时读取 col 27 存入 `batchNumber`；批次模式创建 `depot_head` + `depot_item` |
+| `MaterialService.getStockMapCache()` | 还原为原始签名（移除批次格式解析参数），depot 列偏移从 26 改为 27 |
+| `MaterialService.parseStockCell()` | 删除（不再需要解析 "批号:数量" 混合格式） |
+
+### Excel 模板格式
+
+```
+| ... | 备注(col 26) | 批号(col 27) | 仓库1(col 28) | ... | 深圳(col 31) |
+| ... | 原装正品现货  | 22+          |               |     | 4500           |
+```
+
+### 幂等性设计
+
+- **重复导入覆盖**：同物料+同仓库下旧的期初 `depot_item` 在导入时自动清理，防止货盘表更新后旧批次残留
+- **current_stock 直接 SET**：不用 `updateCurrentStockFun`（该方法内部叠加 `initial_stock` 会导致库存翻倍）
+- **initial_stock 保留**：物料维度的期初库存数正常写入，用于商品列表的"初始库存"列显示
+
+---
+
+## 改动 8: SQL 导入脚本修复
+
+### 背景
+
+`scripts/import_stock.py` 是早期的 SQL 管道导入脚本，通过 Python 生成 SQL → 管道直写 MySQL。测试中发现多个问题。
+
+### 修复项
+
+| 问题 | 现象 | 修复 | 位置 |
+|------|------|------|------|
+| 编码乱码 | 库存全为 0 | 用法注释加 `--default-character-set=utf8mb4` | [import_stock.py L7](file:///opt/jshERP/scripts/import_stock.py#L7) |
+| 验证 SQL 中文报错 | 导入完成但验证失败 | 别名改为 ASCII (`'materials'`, `'stock_entries'`) | L251-254 |
+| `depot_item` 重复删除 | 明细插入失败 | 删除第 5 节冗余的 DELETE 逻辑 | 已删除 |
+| `basic_number` 为 NULL | 报表批号查不到 | INSERT 同时填入 `basic_number = oper_number` | L228-229 |
+| 命令行支持 | 每次改硬编码路径 | `sys.argv[1]` 可选传 CSV 路径 | L31 |
+
+### 适用场景
+
+SQL 脚本适合纯数据初始化/迁移场景。日常运营建议使用 API (`POST /material/importExcel`)，走完整业务逻辑（日志、校验、库存重算等）。
 
 ---
 
