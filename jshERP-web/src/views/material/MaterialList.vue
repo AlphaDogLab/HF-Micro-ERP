@@ -511,7 +511,7 @@
       },
       handleImportXls() {
         let importExcelUrl = this.url.importExcelUrl
-        let templateUrl = '/doc/goods_template.xls'
+        let templateUrl = '/jshERP-boot/material/exportExcel?templateOnly=true'
         let templateName = '商品Excel模板[下载]'
         this.$refs.modalImportForm.initModal(importExcelUrl, templateUrl, templateName);
         this.$refs.modalImportForm.title = "商品导入";

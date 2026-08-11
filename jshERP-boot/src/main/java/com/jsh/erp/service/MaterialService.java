@@ -485,32 +485,46 @@ public class MaterialService {
     public void exportExcel(String categoryId, String materialParam, String color, String materialOther, String weight,
                                              String expiryNum, String enabled, String enableSerialNumber, String enableBatchNumber,
                                              String remark, String mpList, HttpServletResponse response)throws Exception {
+        exportExcel(categoryId, materialParam, color, materialOther, weight, expiryNum, enabled, enableSerialNumber,
+                enableBatchNumber, remark, mpList, false, response);
+    }
+
+    public void exportExcel(String categoryId, String materialParam, String color, String materialOther, String weight,
+                                             String expiryNum, String enabled, String enableSerialNumber, String enableBatchNumber,
+                                             String remark, String mpList, boolean templateOnly,
+                                             HttpServletResponse response)throws Exception {
         String title = "商品信息";
         List<Long> idList = new ArrayList<>();
-        if(StringUtil.isNotEmpty(categoryId)){
-            idList = getListByParentId(Long.parseLong(categoryId));
-        }
-        //查询商品主条码相关列表
-        List<MaterialVo4Unit> dataList = materialMapperEx.exportExcel(materialParam, color, materialOther, weight, expiryNum, enabled, enableSerialNumber,
-                enableBatchNumber, remark, idList);
-        if (null != dataList && dataList.size() > EXPORT_LIMIT) {
-            File file = ExcelUtils.exportObjectsOneSheet(fileExportTmp, title, "单次导出条数超出限制（1万条）", new String[0], title, new ArrayList<>());
-            ExcelUtils.downloadExcel(file, file.getName(), response);
-            return;
-        }
-        //查询商品副条码相关列表
+        List<MaterialVo4Unit> dataList = null;
         Map<Long, MaterialExtend> otherMaterialMap = new HashMap<>();
-        List<MaterialExtend> otherDataList = materialMapperEx.getOtherMaterialList();
-        for(MaterialExtend me: otherDataList) {
-            //遇到多个副条码的情况，只加第一个
-            otherMaterialMap.putIfAbsent(me.getMaterialId(), me);
+        List<MaterialInitialStock> misList = null;
+        Map<String, BigDecimal> misMap = new HashMap<>();
+
+        if (!templateOnly) {
+            if(StringUtil.isNotEmpty(categoryId)){
+                idList = getListByParentId(Long.parseLong(categoryId));
+            }
+            //查询商品主条码相关列表
+            dataList = materialMapperEx.exportExcel(materialParam, color, materialOther, weight, expiryNum, enabled, enableSerialNumber,
+                    enableBatchNumber, remark, idList);
+            if (null != dataList && dataList.size() > EXPORT_LIMIT) {
+                File file = ExcelUtils.exportObjectsOneSheet(fileExportTmp, title, "单次导出条数超出限制（1万条）", new String[0], title, new ArrayList<>());
+                ExcelUtils.downloadExcel(file, file.getName(), response);
+                return;
+            }
+            //查询商品副条码相关列表
+            List<MaterialExtend> otherDataList = materialMapperEx.getOtherMaterialList();
+            for(MaterialExtend me: otherDataList) {
+                //遇到多个副条码的情况，只加第一个
+                otherMaterialMap.putIfAbsent(me.getMaterialId(), me);
+            }
         }
         String otherField = "扩展1,扩展2,扩展3";
         if(StringUtil.isNotEmpty(mpList)) {
             otherField = mpList;
         }
-        String nameStr = "名称*,规格,型号,颜色,品牌,类别,基础重量(kg),保质期(天),基本单位*,副单位,基本条码*,副条码,比例,多属性," +
-                "采购价,零售价,销售价,最低售价,状态*,序列号,批号,仓位货架,制造商," + otherField + ",备注,批号";
+        String nameStr = "名称*,规格,型号*,封装,品牌,类别,基础重量(kg),保质期(天),基本单位*,副单位,基本条码*,副条码,比例,多属性," +
+                "采购价,零售价,销售价,最低售价,状态*,序列号,批号开关,仓位货架,制造商," + otherField + ",备注,批号";
         List<String> nameList = StringUtil.strToStringList(nameStr);
         //仓库列表
         List<Depot> depotList = depotService.getAllList();
@@ -520,11 +534,12 @@ public class MaterialService {
             }
         }
         //期初库存缓存
-        List<MaterialInitialStock> misList = materialInitialStockMapperEx.getListExceptZero();
-        Map<String, BigDecimal> misMap = new HashMap<>();
-        if (misList != null) {
-            for (MaterialInitialStock mis : misList) {
-                misMap.put(mis.getMaterialId() + "_" + mis.getDepotId(), mis.getNumber());
+        if (!templateOnly) {
+            misList = materialInitialStockMapperEx.getListExceptZero();
+            if (misList != null) {
+                for (MaterialInitialStock mis : misList) {
+                    misMap.put(mis.getMaterialId() + "_" + mis.getDepotId(), mis.getNumber());
+                }
             }
         }
         String[] names = StringUtil.listToStringArray(nameList);
@@ -570,7 +585,10 @@ public class MaterialService {
                 objects.add(objs);
             }
         }
-        File file = ExcelUtils.exportObjectsOneSheet(fileExportTmp, title, "*导入时本行内容请勿删除，切记！", names, title, objects);
+        String tip = templateOnly
+                ? "1、带星号的为必填项\n2、序列号和批号开关：填1代表有，填0代表无\n3、批号列：填写具体的批次号，如22+、25+\n4、仓库列录入对应库存（多属性商品不支持库存导入）\n5、导入时本行内容请勿删除，切记！"
+                : "*导入时本行内容请勿删除，切记！";
+        File file = ExcelUtils.exportObjectsOneSheet(fileExportTmp, title, tip, names, title, objects);
         ExcelUtils.downloadExcel(file, file.getName(), response);
     }
 

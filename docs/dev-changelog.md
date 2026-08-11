@@ -16,6 +16,7 @@
 | 6 | **商品列表批次号列** | 2026-08-10 | 前后端 |
 | 7 | **importExcel 支持批次号导入** | 2026-08-11 | 后端 |
 | 8 | SQL 导入脚本修复 | 2026-08-11 | 脚本 |
+| 9 | **导入模板静态文件更新** | 2026-08-11 | 前端 |
 
 ---
 
@@ -245,6 +246,43 @@ FROM eclipse-temurin:8-jre-alpine
 ### 适用场景
 
 SQL 脚本适合纯数据初始化/迁移场景。日常运营建议使用 API (`POST /material/importExcel`)，走完整业务逻辑（日志、校验、库存重算等）。
+
+---
+
+## 改动 9: 导入模板动态化 + 字段标签修正
+
+### 背景
+
+1. **仓库名硬编码**: 原前端模板下载使用静态文件 `/doc/goods_template.xls`，仓库列写死为"仓库1~仓库5"。系统中新建/重命名仓库后模板不会更新。
+2. **字段标签不一致**: 模板中"颜色"应为"封装"（与改动 #5 对齐），"批号"列（开关）与"批号"列（批次值）重名混淆，"型号"缺必填标记。
+3. **改动 #7 的遗留问题**: 后端 `exportExcel` 新增了第27列"批号"，但静态模板未同步。
+
+### 改造方案
+
+后端 `exportExcel` 新增 `templateOnly=true` 参数，跳过数据查询，仅输出表头和操作说明，作为纯净导入模板。前端模板下载改为调用此 API，仓库列由后端动态读取数据库实时生成。
+
+### 修改文件
+
+| 文件 | 改动 |
+|---|---|
+| `MaterialService.java` | 新增重载方法 `exportExcel(..., boolean templateOnly)`: `true` 时跳过数据/副条码/期初库存查询，仅查仓库列表拼表头；`false` 时走原逻辑。原方法签名保留为委托调用。 |
+| `MaterialService.java` | `nameStr` 标签修正: `颜色`→`封装`, `型号`→`型号*`, `批号`→`批号开关`（与 col 27"批号"区分） |
+| `MaterialController.java` | 新增 `templateOnly` 可选参数（默认 `false`），透传至 Service |
+| `MaterialList.vue` | 模板下载 URL 从 `/doc/goods_template.xls` 改为 `/jshERP-boot/material/exportExcel?templateOnly=true`（走同源 Nginx 代理，确保携带 Session Cookie） |
+
+### 模板结构
+
+```
+名称* | 规格 | 型号* | 封装 | 品牌 | ... | 序列号 | 批号开关 | ... | 备注 | 批号 | 仓库1 | 仓库2 | 仓库3 | 深圳
+```
+
+- 仓库列名由后端 `depotService.getAllList()` 动态生成，新建仓库自动出现
+- `模版下载` 与 `导出数据` 共用同一套列头逻辑，永不同步问题
+
+### 影响范围
+
+- 现有导出功能不受影响（`templateOnly` 默认 `false`）
+- 不再依赖静态模板文件（`goods_template.xls` 可删除）
 
 ---
 

@@ -472,12 +472,13 @@ public class MaterialController extends BaseController {
                             @RequestParam(value = "enableBatchNumber", required = false) String enableBatchNumber,
                             @RequestParam(value = "remark", required = false) String remark,
                             @RequestParam(value = "mpList", required = false) String mpList,
+                            @RequestParam(value = "templateOnly", required = false, defaultValue = "false") Boolean templateOnly,
                             HttpServletRequest request, HttpServletResponse response) {
         try {
             materialService.exportExcel(StringUtil.toNull(categoryId), StringUtil.toNull(materialParam), StringUtil.toNull(color),
                     StringUtil.toNull(materialOther), StringUtil.toNull(weight),
                     StringUtil.toNull(expiryNum), StringUtil.toNull(enabled), StringUtil.toNull(enableSerialNumber),
-                    StringUtil.toNull(enableBatchNumber), StringUtil.toNull(remark), mpList, response);
+                    StringUtil.toNull(enableBatchNumber), StringUtil.toNull(remark), mpList, templateOnly, response);
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
         }
