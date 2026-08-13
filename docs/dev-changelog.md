@@ -17,6 +17,7 @@
 | 7 | **importExcel 支持批次号导入** | 2026-08-11 | 后端 |
 | 8 | SQL 导入脚本修复 | 2026-08-11 | 脚本 |
 | 9 | **导入模板静态文件更新** | 2026-08-11 | 前端 |
+| 10 | 期初库存双算 bug 修复 | 2026-08-13 | 后端 + 脚本 |
 
 ---
 
@@ -283,6 +284,42 @@ SQL 脚本适合纯数据初始化/迁移场景。日常运营建议使用 API (
 
 - 现有导出功能不受影响（`templateOnly` 默认 `false`）
 - 不再依赖静态模板文件（`goods_template.xls` 可删除）
+
+---
+
+## 改动 10: 期初库存双算 bug 修复
+
+### 背景
+
+批号商品导入期初库存时，同一份期初数量被同时写入两处：
+
+1. `jsh_material_initial_stock`（期初库存表）
+2. `sub_type='期初'` 的入库单（`jsh_depot_head` + `jsh_depot_item`）
+
+而库存汇总 SQL（`getStockByParamWithDepotList` / `getSkuStockByParamWithDepotList`）原先把「期初」入库单当作普通入库再加一遍，导致期初数量被重复计算。
+
+**现象**: AD9364BBCZ 做「其他出库单」数量 2500 后，库存里仍显示 2500。
+
+**根因**: `当前库存 = 期初(2500) + 期初入库单(2500) - 出库(2500) = 2500`，期初被加了两次。
+
+### 修复方案
+
+1. 库存汇总 SQL 排除期初入库单：`inTotal` 增加 `dh.sub_type != '期初'` 条件。
+2. `import_stock.py` 补写期初库存表，与 ERP 界面 Excel 导入逻辑保持一致（两条期初导入路径统一）。
+3. 新增一次性脚本 `recalc_batch_stock.sql`，重算所有存在期初入库单的批号商品当前库存。
+
+### 修改文件
+
+| 文件 | 改动 |
+|---|---|
+| `DepotItemMapperEx.xml` | `getSkuStockByParamWithDepotList` / `getStockByParamWithDepotList` 的 `inTotal` 增加 `and dh.sub_type!='期初'` |
+| `scripts/import_stock.py` | 新增第 7 步写 `jsh_material_initial_stock`；当前库存汇总改为按本次期初单据 (`header_id`) 统计 |
+| `scripts/recalc_batch_stock.sql` | 新增：一次性重算所有存在期初入库单的批号商品 `current_number` |
+
+### 影响范围
+
+- 库存查询（公式计算）与商品列表（`current_stock` 表）对批号期初商品不再重复计算。
+- 期初导入的两条路径（ERP 界面 Excel 导入 / `import_stock.py`）行为一致。
 
 ---
 

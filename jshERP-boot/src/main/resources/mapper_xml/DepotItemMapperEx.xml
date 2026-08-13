@@ -767,7 +767,7 @@
 
     <select id="getSkuStockByParamWithDepotList" resultMap="stockMap">
         select
-        sum(case when dh.type='入库' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as inTotal,
+        sum(case when dh.type='入库' and dh.sub_type!='期初' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as inTotal,
         sum(case when dh.type='出库' and dh.sub_type!='调拨' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as outTotal,
         sum(case when dh.sub_type='调拨' <include refid="anotherDepotParam" /> then di.basic_number else 0 end) as transfInTotal,
         sum(case when dh.sub_type='调拨' <include refid="depotParam" /> then di.basic_number else 0 end) as transfOutTotal,
@@ -795,7 +795,7 @@
 
     <select id="getStockByParamWithDepotList" resultMap="stockMap">
         select
-        sum(case when dh.type='入库' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as inTotal,
+        sum(case when dh.type='入库' and dh.sub_type!='期初' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as inTotal,
         sum(case when dh.type='出库' and dh.sub_type!='调拨' <include refid="inOutManageParam" /> <include refid="depotParam" /> then di.basic_number else 0 end) as outTotal,
         sum(case when dh.sub_type='调拨' <include refid="anotherDepotParam" /> then di.basic_number else 0 end) as transfInTotal,
         sum(case when dh.sub_type='调拨' <include refid="depotParam" /> then di.basic_number else 0 end) as transfOutTotal,

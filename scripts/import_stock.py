@@ -13,8 +13,9 @@
     3. 创建"期初入库"单据 (depot_head)
     4. UPSERT 物料 (型号唯一, 重复则更新封装/品牌/备注)
     5. 插入 depot_item (含批次号)
-    6. 汇总写入 current_stock
-    7. 验证结果
+    6. 汇总写入 jsh_material_initial_stock (期初库存表)
+    7. 汇总写入 jsh_material_current_stock (当前库存)
+    8. 验证结果
 
 幂等性:
     - 重复执行不会创建重复物料 (型号唯一)
@@ -229,25 +230,32 @@ def generate_sql():
         print(f"VALUES (@header_id, {var_mat}, {var_ext}, @depot_id, {p['qty']}, {p['qty']}, 0, 0, {escape_sql(p['batch'])}, {escape_sql(UNIT_NAME)}, NULL, NULL, {TENANT_ID}, '0');")
         print()
 
-    # ----- 7. 更新库存汇总 -----
-    print("-- 7. 更新商品库存汇总")
+    # ----- 7. 写入期初库存表 (与 ERP 界面导入一致) -----
+    print("-- 7. 写入期初库存表 jsh_material_initial_stock")
+    print("DELETE FROM jsh_material_initial_stock")
+    print(f"WHERE depot_id = @depot_id AND tenant_id = {TENANT_ID};")
+    print()
+    print("INSERT INTO jsh_material_initial_stock (material_id, depot_id, number, tenant_id, delete_flag)")
+    print("SELECT di.material_id, di.depot_id, SUM(di.basic_number), di.tenant_id, '0'")
+    print("FROM jsh_depot_item di")
+    print("WHERE di.header_id = @header_id")
+    print("GROUP BY di.material_id, di.depot_id, di.tenant_id;")
+    print()
+
+    # ----- 8. 更新当前库存汇总 (以本次期初单据为准) -----
+    print("-- 8. 更新商品库存汇总")
     print("DELETE FROM jsh_material_current_stock")
     print(f"WHERE depot_id = @depot_id AND tenant_id = {TENANT_ID};")
     print()
     print("INSERT INTO jsh_material_current_stock (material_id, depot_id, current_number, tenant_id, delete_flag)")
-    print("SELECT di.material_id, di.depot_id, SUM(di.oper_number), di.tenant_id, '0'")
+    print("SELECT di.material_id, di.depot_id, SUM(di.basic_number), di.tenant_id, '0'")
     print("FROM jsh_depot_item di")
-    print("JOIN jsh_depot_head dh ON di.header_id = dh.id")
-    print("WHERE di.depot_id = @depot_id")
-    print("  AND dh.type = '入库'")
-    print("  AND dh.status = '1'")
-    print("  AND di.delete_flag = '0'")
-    print(f"  AND di.tenant_id = {TENANT_ID}")
+    print("WHERE di.header_id = @header_id")
     print("GROUP BY di.material_id, di.depot_id, di.tenant_id;")
     print()
 
-    # ----- 8. 验证 -----
-    print("-- 8. 验证结果")
+    # ----- 9. 验证 -----
+    print("-- 9. 验证结果")
     print("SELECT 'materials' AS item, COUNT(*) AS cnt FROM jsh_material WHERE tenant_id=" + str(TENANT_ID) + ";")
     print("SELECT 'stock_entries' AS item, COUNT(*) AS cnt FROM jsh_material_current_stock WHERE tenant_id=" + str(TENANT_ID) + ";")
     print("SELECT 'depot_items' AS item, COUNT(*) AS cnt FROM jsh_depot_item WHERE header_id=@header_id;")
